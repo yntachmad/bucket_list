@@ -10,6 +10,11 @@ class AddBucketList extends StatefulWidget {
 class _AddBucketListState extends State<AddBucketList> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        // ignore: prefer_const_constructors
+        title: Text("Add Bucket List"),
+      ),
+    );
   }
 }

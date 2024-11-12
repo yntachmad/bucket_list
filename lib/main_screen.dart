@@ -1,3 +1,4 @@
+import 'package:bucket_list/view_item.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
@@ -11,6 +12,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   List<dynamic> bucketListData = [];
   bool isLoading = false;
+  bool isError = false;
 
   Future<void> getData() async {
     setState(() {
@@ -20,11 +22,19 @@ class _MainScreenState extends State<MainScreen> {
       Response response = await Dio().get(
           'https://flutterbucketlist-default-rtdb.asia-southeast1.firebasedatabase.app/bucketlist.json');
 
-      bucketListData = response.data;
+      bucketListData = response.data ?? [];
+      if (response.data is List) {
+        bucketListData = response.data;
+      } else {
+        bucketListData = [];
+      }
+
       isLoading = false;
+      isError = false;
       setState(() {});
     } catch (e) {
       isLoading = false;
+      isError = true;
       setState(() {});
       showDialog(
           // ignore: use_build_context_synchronously
@@ -54,11 +64,72 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
   }
 
+  Widget errorWidgets({required String errorMessage}) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.warning),
+          Text(errorMessage),
+          ElevatedButton(
+            onPressed: getData,
+            child: const Text("Try again"),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget listDataWidget() {
+    return ListView.builder(
+      itemCount: bucketListData.length,
+      itemBuilder: (BuildContext connect, int index) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: (bucketListData[index] is Map)
+              ? ListTile(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          // ignore: prefer_const_constructors
+                          return ViewItem(
+                            title: bucketListData[index]['item'].toString(),
+                            image: bucketListData[index]['image'].toString(),
+                            index: index,
+                          );
+                        },
+                      ),
+                    ).then(
+                      (value) {
+                        getData();
+                      },
+                    );
+                  },
+                  leading: CircleAvatar(
+                    radius: 25,
+                    backgroundImage:
+                        NetworkImage(bucketListData[index]?['image'] ?? ""),
+                  ),
+                  title: Text(bucketListData[index]?['item'] ?? ""),
+                  trailing: Text(
+                    bucketListData[index]?['cost'].toString() ?? "",
+                  ),
+                )
+              : const SizedBox(),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.pushNamed(context, "/add");
+        },
         shape: const CircleBorder(),
         // ignore: prefer_const_constructors
         child: Icon(Icons.add),
@@ -88,24 +159,11 @@ class _MainScreenState extends State<MainScreen> {
         child: isLoading
             // ignore: prefer_const_constructors
             ? LinearProgressIndicator()
-            : ListView.builder(
-                itemCount: bucketListData.length,
-                itemBuilder: (BuildContext connect, int index) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        radius: 25,
-                        backgroundImage:
-                            NetworkImage(bucketListData[index]['image'] ?? ""),
-                      ),
-                      title: Text(bucketListData[index]['item'] ?? ""),
-                      trailing:
-                          Text(bucketListData[index]['cost'].toString() ?? ""),
-                    ),
-                  );
-                },
-              ),
+            : isError
+                ? errorWidgets(errorMessage: "Error get Loading Data from")
+                : bucketListData.isEmpty
+                    ? const Center(child: Text("No Data on Bucket List"))
+                    : listDataWidget(),
       ),
     );
   }
