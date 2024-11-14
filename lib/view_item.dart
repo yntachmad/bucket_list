@@ -23,7 +23,22 @@ class _ViewItemState extends State<ViewItem> {
       Response response = await Dio().delete(
           'https://flutterbucketlist-default-rtdb.asia-southeast1.firebasedatabase.app/bucketlist/${widget.index}.json');
 
-      Navigator.pop(context);
+      Navigator.pop(context, "refresh");
+    } catch (e) {
+      print("error");
+    }
+  }
+
+  Future<void> updateData() async {
+    try {
+      Map<String, dynamic> updateData = {
+        'completed': true,
+      };
+      Response response = await Dio().patch(
+          'https://flutterbucketlist-default-rtdb.asia-southeast1.firebasedatabase.app/bucketlist/${widget.index}.json',
+          data: updateData);
+
+      Navigator.pop(context, "refresh");
     } catch (e) {
       print("error");
     }
@@ -42,19 +57,20 @@ class _ViewItemState extends State<ViewItem> {
                     context: context,
                     builder: (context) {
                       return AlertDialog(
-                        title: Text("Are you sure you want to delete this ??"),
+                        title: const Text(
+                            "Are you sure you want to delete this ??"),
                         actions: [
                           InkWell(
                             onTap: () {
                               Navigator.pop(context);
                             },
-                            child: Text("Cancel"),
+                            child: const Text("Cancel"),
                           ),
                           InkWell(
                             onTap: () {
                               deleteData();
                             },
-                            child: Text("Delete"),
+                            child: const Text("Delete"),
                           ),
 
                           // Add your other actions here like "Edit", "Share", etc.
@@ -62,7 +78,11 @@ class _ViewItemState extends State<ViewItem> {
                       );
                     });
               }
-              print(value);
+
+              if (value == 2) {
+                updateData();
+              }
+              // print(value);
             },
             itemBuilder: (context) {
               return [
