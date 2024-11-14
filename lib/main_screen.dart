@@ -81,46 +81,66 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget listDataWidget() {
-    return ListView.builder(
-      itemCount: bucketListData.length,
-      itemBuilder: (BuildContext connect, int index) {
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: (bucketListData[index] is Map)
-              ? ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          // ignore: prefer_const_constructors
-                          return ViewItem(
-                            title: bucketListData[index]['item'].toString(),
-                            image: bucketListData[index]['image'].toString(),
-                            index: index,
+    List<dynamic> filteredList = bucketListData.where((element) {
+      return !(element['completed']);
+    }).toList();
+    return filteredList.isEmpty
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("No Data on Bucket List"),
+                ElevatedButton(
+                  onPressed: () => getData(),
+                  child: const Text("Load Data"),
+                ),
+              ],
+            ),
+          )
+        : ListView.builder(
+            itemCount: bucketListData.length,
+            itemBuilder: (BuildContext connect, int index) {
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: (bucketListData[index] is Map)
+                    ? ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                // ignore: prefer_const_constructors
+                                return ViewItem(
+                                  title:
+                                      bucketListData[index]['item'].toString(),
+                                  image:
+                                      bucketListData[index]['image'].toString(),
+                                  index: index,
+                                );
+                              },
+                            ),
+                          ).then(
+                            (value) {
+                              if (value == "refresh") {
+                                getData();
+                              }
+                            },
                           );
                         },
-                      ),
-                    ).then(
-                      (value) {
-                        getData();
-                      },
-                    );
-                  },
-                  leading: CircleAvatar(
-                    radius: 25,
-                    backgroundImage:
-                        NetworkImage(bucketListData[index]?['image'] ?? ""),
-                  ),
-                  title: Text(bucketListData[index]?['item'] ?? ""),
-                  trailing: Text(
-                    bucketListData[index]?['cost'].toString() ?? "",
-                  ),
-                )
-              : const SizedBox(),
-        );
-      },
-    );
+                        leading: CircleAvatar(
+                          radius: 25,
+                          backgroundImage: NetworkImage(
+                              bucketListData[index]?['image'] ?? ""),
+                        ),
+                        title: Text(bucketListData[index]?['item'] ?? ""),
+                        trailing: Text(
+                          bucketListData[index]?['cost'].toString() ?? "",
+                        ),
+                      )
+                    : const SizedBox(),
+              );
+            },
+          );
   }
 
   @override
@@ -161,9 +181,11 @@ class _MainScreenState extends State<MainScreen> {
             ? LinearProgressIndicator()
             : isError
                 ? errorWidgets(errorMessage: "Error get Loading Data from")
-                : bucketListData.isEmpty
-                    ? const Center(child: Text("No Data on Bucket List"))
-                    : listDataWidget(),
+                :
+                // bucketListData.isEmpty
+                //     ? const Center(child: Text("No Data on Bucket List"))
+                //     :
+                listDataWidget(),
       ),
     );
   }
