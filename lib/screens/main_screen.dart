@@ -1,4 +1,5 @@
-import 'package:bucket_list/view_item.dart';
+import 'package:bucket_list/screens/add_screen.dart';
+import 'package:bucket_list/screens/view_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
@@ -82,7 +83,8 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget listDataWidget() {
     List<dynamic> filteredList = bucketListData.where((element) {
-      return !(element['completed']);
+      bool complated = !(element?['completed'] ?? false);
+      return complated;
     }).toList();
     return filteredList.isEmpty
         ? Center(
@@ -100,45 +102,42 @@ class _MainScreenState extends State<MainScreen> {
         : ListView.builder(
             itemCount: bucketListData.length,
             itemBuilder: (BuildContext connect, int index) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: (bucketListData[index] is Map)
-                    ? ListTile(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) {
-                                // ignore: prefer_const_constructors
-                                return ViewItem(
-                                  title:
-                                      bucketListData[index]['item'].toString(),
-                                  image:
-                                      bucketListData[index]['image'].toString(),
-                                  index: index,
-                                );
-                              },
-                            ),
-                          ).then(
-                            (value) {
-                              if (value == "refresh") {
-                                getData();
-                              }
+              return (bucketListData[index] is Map &&
+                      !(bucketListData[index]?['completed'] ?? false))
+                  ? ListTile(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              // ignore: prefer_const_constructors
+                              return ViewItem(
+                                title: bucketListData[index]['item'].toString(),
+                                image:
+                                    bucketListData[index]['image'].toString(),
+                                index: index,
+                              );
                             },
-                          );
-                        },
-                        leading: CircleAvatar(
-                          radius: 25,
-                          backgroundImage: NetworkImage(
-                              bucketListData[index]?['image'] ?? ""),
-                        ),
-                        title: Text(bucketListData[index]?['item'] ?? ""),
-                        trailing: Text(
-                          bucketListData[index]?['cost'].toString() ?? "",
-                        ),
-                      )
-                    : const SizedBox(),
-              );
+                          ),
+                        ).then(
+                          (value) {
+                            if (value == "refresh") {
+                              getData();
+                            }
+                          },
+                        );
+                      },
+                      leading: CircleAvatar(
+                        radius: 25,
+                        backgroundImage:
+                            NetworkImage(bucketListData[index]?['image'] ?? ""),
+                      ),
+                      title: Text(bucketListData[index]?['item'] ?? ""),
+                      trailing: Text(
+                        bucketListData[index]?['cost'].toString() ?? "",
+                      ),
+                    )
+                  : const SizedBox();
             },
           );
   }
@@ -148,7 +147,14 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, "/add");
+          // Navigator.pushNamed(context, "/add");
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return AddBucketList(newIndex: bucketListData.length);
+          })).then((value) {
+            if (value == "refresh") {
+              getData();
+            }
+          });
         },
         shape: const CircleBorder(),
         // ignore: prefer_const_constructors
